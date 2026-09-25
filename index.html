@@ -95,13 +95,14 @@
 
   /* Calendar */
   .weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--sub);font-size:13px;font-weight:600;margin:10px 0 8px;}
-  .grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
   .day-cell{
     aspect-ratio: 0.78;
+    min-width:0;
     border-radius:14px;
     border:1px solid var(--glass-brd);
     background:var(--glass);
-    padding:6px 4px;
+    padding:5px 2px;
     display:flex;flex-direction:column;align-items:center;
     font-size:11px;
     position:relative;
@@ -113,7 +114,7 @@
   .day-cell.vacation{background:rgba(232,185,75,0.10); border-color:rgba(232,185,75,0.30);}
   .day-num{font-weight:800;font-size:13px;margin-bottom:3px;}
   .weekend .day-num{color:var(--off);}
-  .day-pill{border-radius:6px;padding:1px 0;width:100%;text-align:center;margin-top:1px;font-weight:700;font-size:10px;}
+  .day-pill{border-radius:6px;padding:1px 0;width:100%;text-align:center;margin-top:1px;font-weight:700;font-size:9.5px;overflow:hidden;white-space:nowrap;text-overflow:clip;}
   .pill-l{background:rgba(49,208,170,0.18);color:var(--accent);}
   .pill-r{background:rgba(255,255,255,0.10);color:var(--text);}
   .tips-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--tips);}
