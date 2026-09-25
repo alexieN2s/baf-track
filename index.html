@@ -87,7 +87,7 @@
   .progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#2AC7E0,var(--accent));transition:width .4s ease;}
 
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
 
   .stat-mini{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius-sm);padding:12px;}
   .stat-mini .n{font-size:20px;font-weight:800;}
@@ -151,14 +151,15 @@
   /* Form / sheet */
   .field{margin-bottom:14px;}
   .field label{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);font-weight:600;margin-bottom:6px;}
-  .stepper-row{display:flex;align-items:center;gap:10px;}
+  .stepper-row{display:flex;align-items:center;gap:8px;}
   .stepper-row input{
-    flex:1;text-align:center;font-size:24px;font-weight:800;
+    flex:1;min-width:0;text-align:center;font-size:24px;font-weight:800;
     background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;
-    padding:12px;color:var(--text);
+    padding:12px 6px;color:var(--text);
   }
   .stepper-row input:focus{outline:none;border-color:var(--accent);}
   .step-btn{
+    flex-shrink:0;
     width:44px;height:44px;border-radius:50%;border:1px solid var(--glass-brd);
     background:var(--glass);color:var(--text);font-size:20px;font-weight:700;
   }
