@@ -167,6 +167,16 @@
   .tips-field input{color:var(--tips);}
   .tips-field input:focus{border-color:var(--tips);}
 
+  .settings-row{display:flex;gap:10px;}
+  .settings-field{flex:1;min-width:0;}
+  .settings-field label{display:block;font-size:11.5px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+  .settings-field input{
+    width:100%;box-sizing:border-box;text-align:center;font-size:16px;font-weight:700;
+    background:var(--glass);border:1px solid var(--glass-brd);border-radius:12px;
+    padding:10px 6px;color:var(--text);
+  }
+  .settings-field input:focus{outline:none;border-color:var(--accent);}
+
   .day-total{text-align:center;color:var(--sub);font-size:14px;margin:6px 0 16px;}
   .day-total b{color:var(--text);font-size:16px;}
 
@@ -181,6 +191,18 @@
   .btn-vac{background:var(--tips-dim);color:var(--tips);border:1px solid rgba(232,185,75,0.3);}
   .btn-danger{background:rgba(255,107,107,0.12);color:var(--danger);border:1px solid rgba(255,107,107,0.3);}
 
+  .backup-card{padding:14px 16px;}
+  .backup-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .backup-top .card-label{margin:0;}
+  .backup-top .sub-line{margin:0;font-size:12px;}
+  .backup-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-sm{
+    flex:1;min-width:86px;border:none;border-radius:12px;padding:10px 8px;font-size:12.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--glass);border:1px solid var(--glass-brd);color:var(--text);
+  }
+  .btn-sm:active{transform:scale(0.95);}
+
   .toast{
     position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:50%;transform:translateX(-50%) translateY(-20px);
     background:rgba(20,22,28,0.85);border:1px solid var(--glass-brd);backdrop-filter:blur(20px);
@@ -189,6 +211,30 @@
     display:flex;align-items:center;gap:8px;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(5,6,9,0.6);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .modal-overlay.show{opacity:1;pointer-events:auto;}
+  .modal-box{
+    width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--glass-brd);
+    border-radius:var(--radius);padding:20px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.45);
+    transform:translateY(8px) scale(0.98);transition:transform .2s ease;
+  }
+  .modal-overlay.show .modal-box{transform:translateY(0) scale(1);}
+  .modal-msg{font-size:15px;font-weight:600;line-height:1.4;margin-bottom:16px;}
+  .modal-input{
+    width:100%;box-sizing:border-box;text-align:center;font-size:18px;font-weight:700;
+    background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;
+    padding:12px 6px;color:var(--text);margin-bottom:16px;
+  }
+  .modal-input:focus{outline:none;border-color:var(--accent);}
+  .modal-actions{display:flex;gap:10px;}
+  .modal-actions .btn-sm{padding:12px 8px;font-size:14px;}
+  .modal-actions .btn-ok{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(49,208,170,0.35);}
 
   .ist-item{
     display:flex;align-items:center;justify-content:space-between;
@@ -250,6 +296,7 @@
         <div class="actions">
           <button class="btn btn-primary" id="saveDay">Salvează ✓</button>
           <button class="btn btn-vac" id="vacBtn">🏖️ Marchează concediu</button>
+          <button class="btn btn-ghost" id="vacRangeBtn">🏖️ Concediu pe interval</button>
           <button class="btn btn-danger" id="delBtn">🗑️ Șterge această zi</button>
         </div>
       </div>
@@ -272,8 +319,15 @@
         <div class="progress-wrap">
           <div class="progress-top"><span>Progres spre prag</span><span id="progPct">0%</span></div>
           <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
-          <div class="progress-top" style="margin-top:6px;"><span id="progNow">0</span><span>⭐ 2.000</span></div>
+          <div class="progress-top" style="margin-top:6px;"><span id="progNow">0</span><span id="progGoal">⭐ 2.000</span></div>
         </div>
+      </div>
+
+      <div class="card" id="projCard">
+        <div class="card-label">🔮 Proiecție sfârșit de lună</div>
+        <div class="big-num accent" id="projVal">0 exp.</div>
+        <div class="sub-line" id="projSub">estimare pe baza mediei zilnice</div>
+        <div class="sub-line" id="projNeed" style="margin-top:6px;"></div>
       </div>
 
       <div class="card tips">
@@ -293,15 +347,6 @@
         <div class="stat-mini"><div class="n" id="sAvg">0</div><div class="l">Medie/zi</div></div>
       </div>
 
-      <div class="card" style="margin-top:14px;">
-        <div class="card-label">🗄️ Backup date</div>
-        <div class="sub-line" id="backupSub" style="margin-bottom:14px;">niciun backup făcut încă</div>
-        <div class="actions">
-          <button class="btn btn-ghost" id="exportBtn">⬇️ Descarcă backup (.json)</button>
-          <button class="btn btn-ghost" id="importBtn">⬆️ Importă backup</button>
-          <input type="file" id="importFile" accept="application/json" style="display:none;">
-        </div>
-      </div>
     </section>
 
     <!-- ISTORIC -->
@@ -310,6 +355,35 @@
         <div class="card-label">🗂️ Istoric luni</div>
         <div class="sub-line" style="margin-bottom:6px;">totalurile fiecărei luni cu date salvate</div>
       </div>
+
+      <div class="card backup-card">
+        <div class="backup-top">
+          <span class="card-label">🗄️ Backup</span>
+          <span class="sub-line" id="backupSub">niciun backup făcut încă</span>
+        </div>
+        <div class="backup-actions">
+          <button class="btn-sm" id="exportBtn">⬇️ JSON</button>
+          <button class="btn-sm" id="exportCsvBtn">⬇️ CSV</button>
+          <button class="btn-sm" id="importBtn">⬆️ Importă</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px;">⚙️ Prag & bonus</div>
+        <div class="settings-row">
+          <div class="settings-field">
+            <label>Prag lunar (exp.)</label>
+            <input id="setThreshold" type="text" inputmode="numeric" value="2000">
+          </div>
+          <div class="settings-field">
+            <label>Rată bonus (lei/exp.)</label>
+            <input id="setBonusRate" type="text" inputmode="decimal" value="0.50">
+          </div>
+        </div>
+        <button class="btn-sm" id="saveSettingsBtn" style="width:100%;margin-top:10px;">💾 Salvează setările</button>
+      </div>
+
       <div id="istList"></div>
     </section>
   </main>
@@ -325,10 +399,30 @@
 </div>
 <div class="toast" id="toast">✓ Salvat</div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-msg" id="modalMsg"></div>
+    <input type="text" id="modalInput" class="modal-input" inputmode="numeric" style="display:none;">
+    <div class="modal-actions">
+      <button class="btn-sm" id="modalCancel">Anulează</button>
+      <button class="btn-sm btn-ok" id="modalOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const KEY = "baftrack_data_v1";
-const THRESHOLD = 2000;
-const BONUS_RATE = 0.5;
+const SETTINGS_KEY = "baftrack_settings_v1";
+
+function loadSettings(){
+  let raw = localStorage.getItem(SETTINGS_KEY);
+  if(raw){
+    try{ const s = JSON.parse(raw); if(s && s.threshold>0 && s.bonusRate>=0) return s; }catch(e){}
+  }
+  return { threshold: 2000, bonusRate: 0.5 };
+}
+let SETTINGS = loadSettings();
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }
 
 function loadData(){
   let raw = localStorage.getItem(KEY);
@@ -422,18 +516,50 @@ function renderSummary(){
   const m = ensureMonth(mKey(viewDate));
   let L=0,R=0,T=0,tips=0,daysWorked=0;
   Object.values(m.days).forEach(e=>{ L+=e.l; R+=e.r; T+=(e.l+e.r); tips+=(e.t||0); daysWorked++; });
-  const over = Math.max(0, T-THRESHOLD);
-  const bonus = over*BONUS_RATE;
+  const over = Math.max(0, T-SETTINGS.threshold);
+  const bonus = over*SETTINGS.bonusRate;
   document.getElementById("bonusVal").textContent = bonus.toFixed(2)+" lei";
-  document.getElementById("bonusSub").textContent = over+" expediții × 0.50 lei";
-  const pct = Math.min(100, Math.round((T/THRESHOLD)*100));
+  document.getElementById("bonusSub").textContent = over+" expediții × "+SETTINGS.bonusRate.toFixed(2)+" lei";
+  const pct = Math.min(100, Math.round((T/SETTINGS.threshold)*100));
   document.getElementById("progPct").textContent = pct+"%";
   document.getElementById("progFill").style.width = pct+"%";
   document.getElementById("progNow").textContent = T;
+  document.getElementById("progGoal").textContent = "⭐ "+SETTINGS.threshold.toLocaleString("ro-RO");
 
   document.getElementById("tipsVal").textContent = tips.toFixed(2)+" lei";
   const avgTips = daysWorked? (tips/daysWorked) : 0;
   document.getElementById("tipsSub").textContent = "medie "+avgTips.toFixed(2)+" lei / zi lucrată";
+
+  // Proiecție sfârșit de lună — are sens doar pentru luna curentă
+  const projCard = document.getElementById("projCard");
+  if(isSameMonth()){
+    projCard.style.display = "";
+    const totalDays = daysInMonth(viewDate);
+    const lead = firstWeekdayMon0(viewDate);
+    let remainingWorkDays = 0;
+    for(let d=today.getDate()+1; d<=totalDays; d++){
+      const dow = (lead+d-1)%7;
+      const isWeekend = dow===5||dow===6;
+      const isVac = m.vacations.includes(String(d));
+      if(!isWeekend && !isVac) remainingWorkDays++;
+    }
+    const avgPerDay = daysWorked>0 ? T/daysWorked : 0;
+    const projectedTotal = T + avgPerDay*remainingWorkDays;
+    document.getElementById("projVal").textContent = Math.round(projectedTotal).toLocaleString("ro-RO")+" exp.";
+    document.getElementById("projSub").textContent = "medie "+avgPerDay.toFixed(1)+" exp./zi × "+remainingWorkDays+" zile lucrătoare rămase";
+    const remainingNeeded = Math.max(0, SETTINGS.threshold - T);
+    const needEl = document.getElementById("projNeed");
+    if(remainingNeeded===0){
+      needEl.textContent = "✅ Prag deja atins luna aceasta";
+    } else if(remainingWorkDays>0){
+      const perDayNeeded = Math.ceil(remainingNeeded/remainingWorkDays);
+      needEl.textContent = "Ai nevoie de ~"+perDayNeeded+" exp./zi ca să atingi pragul de "+SETTINGS.threshold.toLocaleString("ro-RO")+".";
+    } else {
+      needEl.textContent = "Nu mai sunt zile lucrătoare disponibile luna aceasta.";
+    }
+  } else {
+    projCard.style.display = "none";
+  }
 
   document.getElementById("sL").textContent = L;
   document.getElementById("sR").textContent = R;
@@ -452,8 +578,8 @@ function renderHistory(){
     const m = DATA.months[k];
     let L=0,R=0,T=0,tips=0;
     Object.values(m.days).forEach(e=>{ L+=e.l; R+=e.r; T+=(e.l+e.r); tips+=(e.t||0); });
-    const over = Math.max(0, T-THRESHOLD);
-    const bonus = over*BONUS_RATE;
+    const over = Math.max(0, T-SETTINGS.threshold);
+    const bonus = over*SETTINGS.bonusRate;
     const [y,mo] = k.split("-");
     const label = monthNames[parseInt(mo)-1]+" "+y;
     const item = document.createElement("div");
@@ -474,7 +600,10 @@ function renderHistory(){
 function renderAll(){ renderHeader(); renderToday(); renderCalendar(); renderSummary(); renderHistory(); }
 
 // tabs
+const tabOrder = ["azi","cal","sum","ist"];
+let activeTab = "azi";
 function switchTab(name){
+  activeTab = name;
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById("view-"+name).classList.add("active");
@@ -486,18 +615,25 @@ document.querySelectorAll(".tab-btn").forEach(b=> b.addEventListener("click", ()
 document.getElementById("prevM").addEventListener("click", ()=>{ viewDate.setMonth(viewDate.getMonth()-1); renderAll(); });
 document.getElementById("nextM").addEventListener("click", ()=>{ viewDate.setMonth(viewDate.getMonth()+1); renderAll(); });
 
-// swipe
-let touchX=null;
+// swipe between tabs
+let touchX=null, touchY=null;
 const swipeArea = document.getElementById("swipeArea");
-swipeArea.addEventListener("touchstart", e=>{ touchX = e.touches[0].clientX; });
+swipeArea.addEventListener("touchstart", e=>{
+  if(e.target.closest("input, textarea")){ touchX=null; touchY=null; return; }
+  touchX = e.touches[0].clientX;
+  touchY = e.touches[0].clientY;
+});
 swipeArea.addEventListener("touchend", e=>{
   if(touchX===null) return;
   const dx = e.changedTouches[0].clientX - touchX;
-  if(Math.abs(dx) > 60){
-    if(dx<0) viewDate.setMonth(viewDate.getMonth()+1); else viewDate.setMonth(viewDate.getMonth()-1);
-    renderAll();
+  const dy = e.changedTouches[0].clientY - touchY;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5){
+    const idx = tabOrder.indexOf(activeTab);
+    let next = idx;
+    if(dx<0) next = Math.min(tabOrder.length-1, idx+1); else next = Math.max(0, idx-1);
+    if(next!==idx) switchTab(tabOrder[next]);
   }
-  touchX=null;
+  touchX=null; touchY=null;
 });
 
 // select-all on focus, so typing replaces the 0 directly
@@ -527,6 +663,39 @@ function showToast(msg){
   setTimeout(()=> t.classList.remove("show"), 1400);
 }
 
+// Dialog propriu (înlocuiește confirm()/prompt() nativ, nesigure în modul standalone pe iOS)
+const modalOverlay = document.getElementById("modalOverlay");
+const modalMsg = document.getElementById("modalMsg");
+const modalInput = document.getElementById("modalInput");
+const modalCancel = document.getElementById("modalCancel");
+const modalOk = document.getElementById("modalOk");
+
+function showModal(message, withInput, inputValue){
+  return new Promise((resolve)=>{
+    modalMsg.textContent = message;
+    if(withInput){
+      modalInput.style.display = "";
+      modalInput.value = inputValue!==undefined ? inputValue : "";
+    } else {
+      modalInput.style.display = "none";
+    }
+    modalOverlay.classList.add("show");
+    function cleanup(result){
+      modalOverlay.classList.remove("show");
+      modalOk.removeEventListener("click", onOk);
+      modalCancel.removeEventListener("click", onCancel);
+      resolve(result);
+    }
+    function onOk(){ cleanup(withInput ? modalInput.value : true); }
+    function onCancel(){ cleanup(withInput ? null : false); }
+    modalOk.addEventListener("click", onOk);
+    modalCancel.addEventListener("click", onCancel);
+    if(withInput) setTimeout(()=> { modalInput.focus(); modalInput.select(); }, 60);
+  });
+}
+function customConfirm(message){ return showModal(message, false); }
+function customPrompt(message, defaultValue){ return showModal(message, true, defaultValue); }
+
 document.getElementById("saveDay").addEventListener("click", ()=>{
   const m = ensureMonth(mKey(viewDate));
   const key = String(selectedDay);
@@ -551,7 +720,30 @@ document.getElementById("vacBtn").addEventListener("click", ()=>{
   renderToday(); renderCalendar(); renderSummary();
 });
 
-document.getElementById("delBtn").addEventListener("click", ()=>{
+document.getElementById("vacRangeBtn").addEventListener("click", async ()=>{
+  const totalDays = daysInMonth(viewDate);
+  const startStr = await customPrompt("Prima zi a concediului (1-"+totalDays+"):", String(selectedDay));
+  if(startStr===null) return;
+  const start = parseInt(startStr);
+  if(!start || start<1 || start>totalDays){ showToast("⚠️ Zi invalidă"); return; }
+  const endStr = await customPrompt("Ultima zi a concediului:", String(start));
+  if(endStr===null) return;
+  const end = parseInt(endStr);
+  if(!end || end<start || end>totalDays){ showToast("⚠️ Interval invalid"); return; }
+  const m = ensureMonth(mKey(viewDate));
+  for(let d=start; d<=end; d++){
+    const key = String(d);
+    if(!m.vacations.includes(key)) m.vacations.push(key);
+    delete m.days[key];
+  }
+  save();
+  showToast("🏖️ "+(end-start+1)+" zile marcate concediu");
+  renderToday(); renderCalendar(); renderSummary();
+});
+
+document.getElementById("delBtn").addEventListener("click", async ()=>{
+  const ok = await customConfirm("Ștergi definitiv datele acestei zile? Nu se poate anula.");
+  if(!ok) return;
   const m = ensureMonth(mKey(viewDate));
   const key = String(selectedDay);
   delete m.days[key];
@@ -624,8 +816,69 @@ document.getElementById("importFile").addEventListener("change", (e)=>{
   e.target.value = "";
 });
 
+function buildCsv(){
+  const rows = [["luna","zi","livrate","ridicate","tips","concediu"]];
+  const monthKeys = Object.keys(DATA.months || {}).sort();
+  monthKeys.forEach(mk=>{
+    const m = DATA.months[mk];
+    const allDays = new Set([...Object.keys(m.days||{}), ...(m.vacations||[])].map(Number));
+    Array.from(allDays).sort((a,b)=>a-b).forEach(dayNum=>{
+      const key = String(dayNum);
+      const e = m.days[key];
+      const isVac = (m.vacations||[]).includes(key);
+      rows.push([mk, key, e?e.l:0, e?e.r:0, e?(e.t||0):0, isVac?"da":"nu"]);
+    });
+  });
+  return rows.map(r=>r.join(",")).join("\n");
+}
+
+document.getElementById("exportCsvBtn").addEventListener("click", async ()=>{
+  const stamp = new Date().toISOString().slice(0,10);
+  const filename = "baf-track-backup-"+stamp+".csv";
+  const csvStr = buildCsv();
+  const file = new File([csvStr], filename, {type:"text/csv"});
+
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:"BAF Track — CSV", text:"Export CSV BAF Track ("+stamp+")"});
+      showToast("✓ CSV trimis");
+      return;
+    }catch(err){
+      if(err && err.name === "AbortError") return;
+    }
+  }
+  const blob = new Blob([csvStr], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("⬇️ CSV descărcat");
+});
+
+document.getElementById("setThreshold").value = SETTINGS.threshold;
+document.getElementById("setBonusRate").value = SETTINGS.bonusRate.toFixed(2);
+document.getElementById("saveSettingsBtn").addEventListener("click", ()=>{
+  const th = parseInt(document.getElementById("setThreshold").value);
+  const brRaw = document.getElementById("setBonusRate").value.replace(",", ".");
+  const br = parseFloat(brRaw);
+  if(!th || th<=0){ showToast("⚠️ Prag invalid"); return; }
+  if(isNaN(br) || br<0){ showToast("⚠️ Rată invalidă"); return; }
+  SETTINGS.threshold = th;
+  SETTINGS.bonusRate = br;
+  saveSettings();
+  document.getElementById("setBonusRate").value = br.toFixed(2);
+  showToast("✓ Setări salvate");
+  renderSummary();
+  renderHistory();
+});
+
 renderAll();
 renderBackupSub();
+switchTab("azi");
 </script>
 </body>
 </html>
